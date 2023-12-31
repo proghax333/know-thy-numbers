@@ -29,7 +29,7 @@ const Login = () => {
   
       console.log(response)
 
-      navigate("/listing")
+      navigate("/home/table")
   
     } catch (err) {
       let response = err.response

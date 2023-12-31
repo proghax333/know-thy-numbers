@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import { Plus } from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import env from "../secrets.js";
@@ -86,31 +87,11 @@ function UploadDataForm() {
     });
   };
 
-  const handleGoToListing = () => {
-    navigate("/listing");
-  };
-
   return authenticated ? (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 shadow-md rounded-md w-full md:w-2/3 lg:w-1/2 xl:w-1/3">
-        <div className="flex justify-between mb-4">
-          <button
-            type="button"
-            onClick={handleGoToListing}
-            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-          >
-            Go to Listing
-          </button>
-          <button
-            type="button"
-            // onClick={handleLogout}
-            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-          >
-            Logout
-          </button>
-        </div>
-
-        <h2 className="text-2xl font-bold mb-4 text-center">Upload Data</h2>
+    <div className="min-h-screen bg-gray-100 p-8">
+    <div className="bg-white p-8 shadow-md rounded-md">
+      {/* <div className="ms-12 me-12 my-4"> */}
+        <h2 className="text-2xl font-bold mb-4 text-center">Add Data</h2>
         <form>
           <div className="mb-4">
             <label
@@ -268,19 +249,20 @@ function UploadDataForm() {
             />
           </div>
 
-          {/* Add other form fields similarly */}
-
           <div className="flex items-center justify-center">
             <button
               type="button"
               onClick={handleSubmit}
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+              className="bg-green-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex flex-row items-center"
+              
             >
-              Submit
+              <Plus size={20}/>
+              {/* <span className="mx-2">Add</span> */}
             </button>
           </div>
         </form>
-      </div>
+      {/* </div> */}
+    </div>
     </div>
   ) : (
     ""
