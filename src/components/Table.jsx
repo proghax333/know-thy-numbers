@@ -73,7 +73,7 @@ const DataListing = () => {
   const [filterText, setFilterText] = useState('');
   const [filterOption, setFilterOption] = useState('');
 	const [resetPaginationToggle, setResetPaginationToggle] = useState(false);
-  const pageSize = 10;
+  const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
     // Fetch data from the backend using Axios
@@ -99,7 +99,7 @@ const DataListing = () => {
     };
 
     fetchData().then();
-  }, [currentPage, filterText, filterOption]);
+  }, [currentPage, filterText, filterOption, pageSize]);
 
   // const handleView = (item) => {
   //   setSelectedItem(item);
@@ -117,14 +117,15 @@ const DataListing = () => {
     window.location.href = "/home/table"
   };
 
-  const handleNextPage = () => {
-    console.log("hello")
-    setCurrentPage((prevPage) => prevPage + 1);
+  const handleNextPage = (page) => {
+    console.log("changed page: ", page)
+    setCurrentPage(page);
   };
 
-  const handlePrevPage = () => {
-    console.log("hello")
-    setCurrentPage((prevPage) => Math.max(prevPage - 1, 1));
+  const handleRowsPerPage = (pageSize, currentPage) => {
+    console.log("changed rows per page: ", pageSize, currentPage)
+    setCurrentPage(currentPage);
+    setPageSize(pageSize);
   };
 
   // const handleGoToUpload = () => {
@@ -240,7 +241,7 @@ const DataListing = () => {
               paginationTotalRows={total}
               paginationServer={true}
               onChangePage={handleNextPage}
-              onChangeRowsPerPage={handlePrevPage}
+              onChangeRowsPerPage={handleRowsPerPage}
             />
           </div>
         )
