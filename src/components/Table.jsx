@@ -3,7 +3,7 @@ import axios from "axios";
 import UpdateForm from "./UpdateForm";
 import FilterData from "./FilterData";
 import env from "../secrets.js";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import DataTable from 'react-data-table-component';
 import { Tooltip as ReactTooltip } from 'react-tooltip';
 
@@ -61,6 +61,7 @@ const DataListing = () => {
   };
 
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [dataList, setDataList] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -75,15 +76,26 @@ const DataListing = () => {
 	const [resetPaginationToggle, setResetPaginationToggle] = useState(false);
   const [pageSize, setPageSize] = useState(10);
 
+  // useEffect(() => {
+  //   const params = new URLSearchParams(location.search)
+  //   setFilterOption(params.get("filterOption"))
+  //   setFilterText(params.get("filterText"))
+  // }, [location])
+
   useEffect(() => {
     // Fetch data from the backend using Axios
     const fetchData = async () => {
       try {
+
+        const params = new URLSearchParams(location.search)
+        const text = params.get("filterText")
+        const option = params.get("filterOption")
+
         const url = `${VITE_BACKEND_HOST}/openapi/prediction/findall`;
         let response = await axios({
           method: "post",
           url,
-          data: { filterText, filterOption, currentPage, pageSize },
+          data: { filterText: text ?? filterText, filterOption: option ?? filterOption, currentPage, pageSize },
           headers: { "Content-Type": "application/json" },
           // withCredentials: true
         });
@@ -99,7 +111,7 @@ const DataListing = () => {
     };
 
     fetchData().then();
-  }, [currentPage, filterText, filterOption, pageSize]);
+  }, [currentPage, filterText, filterOption, pageSize, location]);
 
   // const handleView = (item) => {
   //   setSelectedItem(item);
