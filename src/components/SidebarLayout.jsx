@@ -53,6 +53,14 @@ function SidebarLayout() {
     {
       "text": "Soul",
       "route": "/home/table?filterText=Soul&filterOption=name"
+    },
+    {
+      "text": "Pinnacles",
+      "route": "/home/table?filterText=Pinnacles&filterOption=name"
+    },
+    {
+      "text": "Challenges",
+      "route": "/home/table?filterText=Challenges&filterOption=name"
     }
   ]
 
@@ -60,10 +68,10 @@ function SidebarLayout() {
     <>
       <div className="flex flex-row">
         <Sidebar>
-        <SidebarItem icon={<Plus size={20} />} text="Add Data" route={"/home/upload_data"} />
+          <SidebarItem icon={<Plus size={20} />} text="Add Data" route={"/home/upload_data"} />
           <SidebarItem icon={<Grid3X3 size={20} />} text="All Data" route={"/home/table"} 
-          subitems={namesArr}
-          />
+            subitems={namesArr}
+            />
           <hr className="my-3" />
           <SidebarItem icon={<LogOut size={20} />} text="Logout" route={"/login"} />
         </Sidebar>
