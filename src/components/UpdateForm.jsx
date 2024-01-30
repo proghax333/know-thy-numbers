@@ -1,17 +1,16 @@
 import React, { useState } from 'react';
-import { ArrowLeftFromLine, Save } from "lucide-react";
+import { ArrowLeftFromLine, Save, PlusCircle, MinusCircle } from "lucide-react";
 import axios from 'axios';
 import env from "../secrets.js"
+import QuillEditor from "./QuillEditor.jsx";
 
 const { VITE_BACKEND_HOST } = env
 
 const UpdateForm = ({ selectedItem, handleBack }) => {
   const [updatedItem, setUpdatedItem] = useState(selectedItem);
+  const [dynamicFields, setDynamicFields] = useState([{ heading_1: '', description_1: '' }]);
 
-//   console.log(selectedItem)
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  const handleChange = (name, value) => {
     setUpdatedItem((prevItem) => ({
       ...prevItem,
       [name]: value,
@@ -20,17 +19,48 @@ const UpdateForm = ({ selectedItem, handleBack }) => {
 
   const handleUpdate = async () => {
     try {
-        updatedItem["numerologyNumber"] = Number(updatedItem["numerologyNumber"])
-        console.log(updatedItem)
+      updatedItem["numerologyNumber"] = Number(updatedItem["numerologyNumber"])
+
+      console.log(dynamicFields)
+
+      dynamicFields.forEach(fields => Object.assign(updatedItem, fields))
+      console.log(updatedItem)
+
       // Send a request to the backend to update the item
       await axios.put(`${VITE_BACKEND_HOST}/openapi/prediction/${updatedItem.id}`, updatedItem);
+
       alert('Item updated successfully');
       setUpdatedItem(updatedItem)
-      // Perform any additional logic needed after update
-      // ...
+      
     } catch (error) {
       console.error('Error updating item:', error);
     }
+  };
+
+  const handleFieldChange = (index, name, value) => {
+    const updatedFields = [...dynamicFields];
+    updatedFields[index][name] = value;
+    setDynamicFields(updatedFields);
+  };
+
+  const handleAddField = (op) => {
+    if(dynamicFields.length >= 5 && op === 1) {
+      alert("You can only add maximum 5 heading & description")
+      return
+    }
+
+    if(dynamicFields.length <= 1 && op === -1) return
+
+    setDynamicFields(prevFields => {
+      if(op === 1) {
+        return [
+          ...prevFields,
+          { [`heading_${prevFields.length + 1}`]: '', [`description_${prevFields.length + 1}`]: '' },
+        ]
+      } else if (op === -1) {
+        return prevFields.slice(0, prevFields.length - 1)
+      }
+    })
   };
 
   return (
@@ -84,88 +114,46 @@ const UpdateForm = ({ selectedItem, handleBack }) => {
           />
         </div>
 
-        <div className="mb-4">
-          <label htmlFor="what_is_heading" className="block text-gray-700 font-bold mb-2">
-            What is Heading
-          </label>
-          <input
-            type="text"
-            id="what_is_heading"
-            name="what_is_heading"
-            className="w-full p-2 border border-gray-300 rounded"
-            value={updatedItem.what_is_heading}
-            onChange={handleChange}
-          />
-        </div>
-
-        <div className="mb-4">
-          <label htmlFor="what_is_description" className="block text-gray-700 font-bold mb-2">
-            What is Description
-          </label>
-          <textarea
-            id="what_is_description"
-            name="what_is_description"
-            rows="4"
-            className="w-full p-2 border border-gray-300 rounded"
-            value={updatedItem.what_is_description}
-            onChange={handleChange}
-          />
-        </div>
-
-        <div className="mb-4">
-          <label htmlFor="what_is_description" className="block text-gray-700 font-bold mb-2">
-            Heading
-          </label>
-          <textarea
-            id="heading"
-            name="heading"
-            rows="4"
-            className="w-full p-2 border border-gray-300 rounded"
-            value={updatedItem.heading}
-            onChange={handleChange}
-          />
-        </div>
-
-        <div className="mb-4">
-          <label htmlFor="description" className="block text-gray-700 font-bold mb-2">
-          Description
-          </label>
-          <textarea
-            id="description"
-            name="description"
-            rows="4"
-            className="w-full p-2 border border-gray-300 rounded"
-            value={updatedItem.description}
-            onChange={handleChange}
-          />
-        </div>
-
-        <div className="mb-4">
-          <label htmlFor="add_description" className="block text-gray-700 font-bold mb-2">
-          Add Description
-          </label>
-          <textarea
-            id="add_description"
-            name="add_description"
-            rows="4"
-            className="w-full p-2 border border-gray-300 rounded"
-            value={updatedItem.add_description}
-            onChange={handleChange}
-          />
+        {dynamicFields.map((field, index) => (
+          <div key={index + 1} className="mb-4">
+            <label htmlFor={`heading_${index + 1}`} className="block text-gray-700 font-bold mb-2">
+              Heading {index + 1}
+            </label>
+            <QuillEditor
+              value={field[`heading_${index + 1}`]}
+              onChange={content => handleFieldChange(index, `heading_${index+1}`, content)}
+            />
+            <label htmlFor={`description_${index + 1}`} className="block text-gray-700 font-bold mb-2 mt-4">
+              Description {index + 1}
+            </label>
+            <QuillEditor
+              value={field[`description_${index + 1}`]}
+              onChange={content => handleFieldChange(index, `description_${index+1}`, content)}
+            />
+          </div>
+        ))}
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={() => handleAddField(1)}
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mr-2  flex flex-row items-center"
+          >
+            <PlusCircle size={20}/>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleAddField(-1)}
+            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline  flex flex-row items-center"
+          >
+            <MinusCircle size={20}/>
+          </button>
         </div>
 
         <div className="mb-4">
           <label htmlFor="suggestion" className="block text-gray-700 font-bold mb-2">
           Suggestion
           </label>
-          <textarea
-            id="suggestion"
-            name="suggestion"
-            rows="4"
-            className="w-full p-2 border border-gray-300 rounded"
-            value={updatedItem.suggestion}
-            onChange={handleChange}
-          />
+          <QuillEditor value={updatedItem.suggestion} onChange={(content) => handleChange("suggestion", content)} />
         </div>
 
         <div className='flex flex-row'>

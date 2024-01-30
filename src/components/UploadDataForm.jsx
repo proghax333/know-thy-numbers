@@ -1,8 +1,9 @@
 import { useEffect, useState, useMemo } from "react";
-import { Plus } from "lucide-react";
+import { Plus, MinusCircle, PlusCircle } from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import env from "../secrets.js";
+import QuillEditor from "./QuillEditor.jsx";
 
 const { VITE_BACKEND_HOST } = env;
 
@@ -20,6 +21,7 @@ function UploadDataForm() {
     add_description: "",
     suggestion: "",
   });
+  const [dynamicFields, setDynamicFields] = useState([{ heading_1: '', description_1: '' }]);
 
   // useEffect(() => {
   //   async function checkAuthentication() {
@@ -44,8 +46,8 @@ function UploadDataForm() {
   //   checkAuthentication().catch(e => console.log(e))
   // })
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  const handleChange = (name, value) => {
+    console.log(name, value)
     setFormData((prevData) => ({
       ...prevData,
       [name]: value,
@@ -54,10 +56,14 @@ function UploadDataForm() {
 
   const handleSubmit = async () => {
     // You can perform your data upload logic here
-    console.log("Form Data:", formData);
-
+    
     try {
       formData["numerologyNumber"] = Number(formData["numerologyNumber"]);
+      
+      dynamicFields.forEach(fields => Object.assign(formData, fields))
+      
+      console.log("Form Data:", formData);
+
       // Send a request to the backend to update the item
       const url = `${VITE_BACKEND_HOST}/openapi/prediction/create`;
       let response = await axios({
@@ -87,10 +93,35 @@ function UploadDataForm() {
     });
   };
 
+  const handleFieldChange = (index, name, value) => {
+    const updatedFields = [...dynamicFields];
+    updatedFields[index][name] = value;
+    setDynamicFields(updatedFields);
+  };
+
+  const handleAddField = (op) => {
+    if(dynamicFields.length >= 5 && op === 1) {
+      alert("You can only add maximum 5 heading & description")
+      return
+    }
+
+    if(dynamicFields.length <= 1 && op === -1) return
+
+    setDynamicFields(prevFields => {
+      if(op === 1) {
+        return [
+          ...prevFields,
+          { [`heading_${prevFields.length + 1}`]: '', [`description_${prevFields.length + 1}`]: '' },
+        ]
+      } else if (op === -1) {
+        return prevFields.slice(0, prevFields.length - 1)
+      }
+    })
+  };
+
   return authenticated ? (
     <div className="min-h-screen bg-gray-100 p-8">
-    <div className="bg-white p-8 shadow-md rounded-md">
-      {/* <div className="ms-12 me-12 my-4"> */}
+      <div className="bg-white p-8 shadow-md rounded-md">
         <h2 className="text-2xl font-bold mb-4 text-center">Add Data</h2>
         <form>
           <div className="mb-4">
@@ -105,7 +136,7 @@ function UploadDataForm() {
               name="name"
               className="w-full p-2 border border-gray-300 rounded"
               value={formData.name}
-              onChange={handleChange}
+              onChange={(e) => handleChange("name", e.target.value)}
               // defaultValue={"Destiny"}
             >
               {Object.values({
@@ -143,93 +174,43 @@ function UploadDataForm() {
               name="numerologyNumber"
               className="w-full p-2 border border-gray-300 rounded"
               value={formData.numerologyNumber}
-              onChange={handleChange}
+              onChange={(e) => handleChange("numerologyNumber", e.target.value)}
             />
           </div>
 
-          <div className="mb-4">
-            <label
-              htmlFor="what_is_heading"
-              className="block text-gray-700 font-bold mb-2"
+          {dynamicFields.map((field, index) => (
+            <div key={index + 1} className="mb-4">
+              <label htmlFor={`heading_${index + 1}`} className="block text-gray-700 font-bold mb-2">
+                Heading {index + 1}
+              </label>
+              <QuillEditor
+                value={field[`heading_${index + 1}`]}
+                onChange={content => handleFieldChange(index, `heading_${index+1}`, content)}
+              />
+              <label htmlFor={`description_${index + 1}`} className="block text-gray-700 font-bold mb-2 mt-4">
+                Description {index + 1}
+              </label>
+              <QuillEditor
+                value={field[`description_${index + 1}`]}
+                onChange={content => handleFieldChange(index, `description_${index+1}`, content)}
+              />
+            </div>
+          ))}
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={() => handleAddField(1)}
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mr-2  flex flex-row items-center"
             >
-              What is Heading
-            </label>
-            <input
-              type="text"
-              id="what_is_heading"
-              name="what_is_heading"
-              className="w-full p-2 border border-gray-300 rounded"
-              value={formData.what_is_heading}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="mb-4">
-            <label
-              htmlFor="what_is_description"
-              className="block text-gray-700 font-bold mb-2"
+              <PlusCircle size={20}/>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleAddField(-1)}
+              className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline  flex flex-row items-center"
             >
-              What is Description
-            </label>
-            <textarea
-              id="what_is_description"
-              name="what_is_description"
-              rows="4"
-              className="w-full p-2 border border-gray-300 rounded"
-              value={formData.what_is_description}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="mb-4">
-            <label
-              htmlFor="what_is_description"
-              className="block text-gray-700 font-bold mb-2"
-            >
-              Heading
-            </label>
-            <textarea
-              id="heading"
-              name="heading"
-              rows="4"
-              className="w-full p-2 border border-gray-300 rounded"
-              value={formData.heading}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="mb-4">
-            <label
-              htmlFor="description"
-              className="block text-gray-700 font-bold mb-2"
-            >
-              Description
-            </label>
-            <textarea
-              id="description"
-              name="description"
-              rows="4"
-              className="w-full p-2 border border-gray-300 rounded"
-              value={formData.description}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="mb-4">
-            <label
-              htmlFor="add_description"
-              className="block text-gray-700 font-bold mb-2"
-            >
-              Add Description
-            </label>
-            <textarea
-              id="add_description"
-              name="add_description"
-              rows="4"
-              className="w-full p-2 border border-gray-300 rounded"
-              value={formData.add_description}
-              onChange={handleChange}
-            />
+              <MinusCircle size={20}/>
+            </button>
           </div>
 
           <div className="mb-4">
@@ -239,14 +220,7 @@ function UploadDataForm() {
             >
               Suggestion
             </label>
-            <textarea
-              id="suggestion"
-              name="suggestion"
-              rows="4"
-              className="w-full p-2 border border-gray-300 rounded"
-              value={formData.suggestion}
-              onChange={handleChange}
-            />
+            <QuillEditor value={formData.suggestion} onChange={(content) => handleChange("suggestion", content)} />
           </div>
 
           <div className="flex items-center justify-center">
@@ -261,8 +235,7 @@ function UploadDataForm() {
             </button>
           </div>
         </form>
-      {/* </div> */}
-    </div>
+      </div>
     </div>
   ) : (
     ""
