@@ -7,6 +7,10 @@ function SidebarLayout() {
 
   const namesArr = [
     {
+      "text": "Destiny",
+      "route": "/home/table?filterText=Destiny&filterOption=name"
+    },
+    {
       "text": "Point Of Security",
       "route": "/home/table?filterText=Point Of Security&filterOption=name"
     },

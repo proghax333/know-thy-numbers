@@ -8,7 +8,28 @@ const { VITE_BACKEND_HOST } = env
 
 const UpdateForm = ({ selectedItem, handleBack }) => {
   const [updatedItem, setUpdatedItem] = useState(selectedItem);
-  const [dynamicFields, setDynamicFields] = useState([{ heading_1: '', description_1: '' }]);
+  const [dynamicFields, setDynamicFields] = useState(() => {
+    let totalFields = 0;
+    const fields = [];
+
+    for(let i = 1; i <= 5; ++i) {
+      const heading = selectedItem[`heading_${i}`];
+      const description = selectedItem[`description_${i}`];
+
+      fields.push({
+        [`heading_${i}`]: heading,
+        [`description_${i}`]: description,
+      });
+
+      if(heading || description) {
+        totalFields = i;
+      }
+    }
+
+    console.log(fields);
+
+    return fields.slice(0, totalFields);
+  });
 
   const handleChange = (name, value) => {
     setUpdatedItem((prevItem) => ({
@@ -36,6 +57,8 @@ const UpdateForm = ({ selectedItem, handleBack }) => {
       console.error('Error updating item:', error);
     }
   };
+
+  console.log("Typeof numer: ", typeof updatedItem["numerologyNumber"]);
 
   const handleFieldChange = (index, name, value) => {
     const updatedFields = [...dynamicFields];
@@ -114,24 +137,27 @@ const UpdateForm = ({ selectedItem, handleBack }) => {
           />
         </div>
 
-        {dynamicFields.map((field, index) => (
-          <div key={index + 1} className="mb-4">
-            <label htmlFor={`heading_${index + 1}`} className="block text-gray-700 font-bold mb-2">
-              Heading {index + 1}
-            </label>
-            <QuillEditor
-              value={field[`heading_${index + 1}`]}
-              onChange={content => handleFieldChange(index, `heading_${index+1}`, content)}
-            />
-            <label htmlFor={`description_${index + 1}`} className="block text-gray-700 font-bold mb-2 mt-4">
-              Description {index + 1}
-            </label>
-            <QuillEditor
-              value={field[`description_${index + 1}`]}
-              onChange={content => handleFieldChange(index, `description_${index+1}`, content)}
-            />
-          </div>
-        ))}
+        {dynamicFields.map((field, index) => {
+          console.log("Field: ", field);
+          return (
+            <div key={index + 1} className="mb-4">
+              <label htmlFor={`heading_${index + 1}`} className="block text-gray-700 font-bold mb-2">
+                Heading {index + 1}
+              </label>
+              <QuillEditor
+                value={field[`heading_${index + 1}`]}
+                onChange={content => handleFieldChange(index, `heading_${index+1}`, content)}
+              />
+              <label htmlFor={`description_${index + 1}`} className="block text-gray-700 font-bold mb-2 mt-4">
+                Description {index + 1}
+              </label>
+              <QuillEditor
+                value={field[`description_${index + 1}`]}
+                onChange={content => handleFieldChange(index, `description_${index+1}`, content)}
+              />
+            </div>
+          )
+        })}
         <div className="flex justify-center">
           <button
             type="button"
@@ -150,10 +176,17 @@ const UpdateForm = ({ selectedItem, handleBack }) => {
         </div>
 
         <div className="mb-4">
-          <label htmlFor="suggestion" className="block text-gray-700 font-bold mb-2">
-          Suggestion
+          <label htmlFor="heading_suggestion" className="block text-gray-700 font-bold mb-2">
+          Heading Suggestion
           </label>
-          <QuillEditor value={updatedItem.suggestion} onChange={(content) => handleChange("suggestion", content)} />
+          <QuillEditor value={updatedItem.heading_suggestion} onChange={(content) => handleChange("heading_suggestion", content)} />
+        </div>
+
+        <div className="mb-4">
+          <label htmlFor="description_suggestion" className="block text-gray-700 font-bold mb-2">
+          Description Suggestion
+          </label>
+          <QuillEditor value={updatedItem.description_suggestion} onChange={(content) => handleChange("description_suggestion", content)} />
         </div>
 
         <div className='flex flex-row'>

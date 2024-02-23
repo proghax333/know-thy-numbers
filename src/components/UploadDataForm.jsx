@@ -12,15 +12,13 @@ function UploadDataForm() {
 
   const [authenticated, setAuthenticated] = useState(true);
   const [formData, setFormData] = useState({
-    name: "Destiny",
-    numerologyNumber: "",
-    what_is_heading: "",
-    what_is_description: "",
-    heading: "",
-    description: "",
-    add_description: "",
-    suggestion: "",
+    "name": "Destiny",
+    "numerologyNumber": "",
+    "heading_suggestion": "",
+    "description_suggestion": ""
   });
+
+  
   const [dynamicFields, setDynamicFields] = useState([{ heading_1: '', description_1: '' }]);
 
   // useEffect(() => {
@@ -213,15 +211,19 @@ function UploadDataForm() {
             </button>
           </div>
 
-          <div className="mb-4">
-            <label
-              htmlFor="suggestion"
-              className="block text-gray-700 font-bold mb-2"
-            >
-              Suggestion
-            </label>
-            <QuillEditor value={formData.suggestion} onChange={(content) => handleChange("suggestion", content)} />
-          </div>
+        <div className="mb-4">
+          <label htmlFor="heading_suggestion" className="block text-gray-700 font-bold mb-2">
+          Heading Suggestion
+          </label>
+          <QuillEditor value={formData.heading_suggestion} onChange={(content) => handleChange("heading_suggestion", content)} />
+        </div>
+
+        <div className="mb-4">
+          <label htmlFor="description_suggestion" className="block text-gray-700 font-bold mb-2">
+          Description Suggestion
+          </label>
+          <QuillEditor value={formData.description_suggestion} onChange={(content) => handleChange("description_suggestion", content)} />
+        </div>
 
           <div className="flex items-center justify-center">
             <button
