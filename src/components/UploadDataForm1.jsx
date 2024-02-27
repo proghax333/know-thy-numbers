@@ -1,13 +1,16 @@
-import React, { useState, useMemo, useCallback, useRef } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Plus, MinusCircle, PlusCircle } from "lucide-react";
 import axios from "axios";
-import JoditEditor from "jodit-react";
-
+import { useNavigate } from "react-router-dom";
 import env from "../secrets.js";
+import QuillEditor from "./QuillEditor.jsx";
 
 const { VITE_BACKEND_HOST } = env;
 
-function UploadDataForm2() {
+function UploadDataForm() {
+  const navigate = useNavigate();
+
+  const [authenticated, setAuthenticated] = useState(true);
   const [formData, setFormData] = useState({
     "name": "Destiny",
     "numerologyNumber": "",
@@ -15,19 +18,39 @@ function UploadDataForm2() {
     "description_suggestion": ""
   });
 
+  
   const [dynamicFields, setDynamicFields] = useState([{ heading_1: '', description_1: '' }]);
 
-  const formDataRef = useRef(formData);
-  formDataRef.current = formData;
+  // useEffect(() => {
+  //   async function checkAuthentication() {
+  //     try {
+  //       const url = `${VITE_BACKEND_HOST}:${VITE_BACKEND_PORT}${VITE_BASE_URL}authenticate`
+  //       let response = await axios({
+  //         method: "post",
+  //         url,
+  //         withCredentials: true
+  //       })
 
-  const editorRefs = useRef(dynamicFields.map(() => ({ headingRef: React.createRef(), descriptionRef: React.createRef() })));
+  //       console.log("Authorized User")
+  //       console.log(response)
 
-  const handleChange = useCallback((name, value) => {
+  //       setAuthenticated(true)
+  //     } catch (err) {
+  //       alert("Access denied")
+  //       navigate("/login")
+  //     }
+  //   }
+
+  //   checkAuthentication().catch(e => console.log(e))
+  // })
+
+  const handleChange = (name, value) => {
     console.log(name, value)
-    console.log(formDataRef.current)
-    formDataRef.current[name] = value
-  }, []);
-
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
 
   const handleSubmit = async () => {
     // You can perform your data upload logic here
@@ -68,57 +91,33 @@ function UploadDataForm2() {
     });
   };
 
-  const handleFieldChange = useCallback((index, name, value) => {
-    // Directly manipulate the refs without causing a state update
-    if(name.startsWith('heading_')) {
-      editorRefs.current[index].headingRef.current = value;
-    } else if(name.startsWith('description_')) {
-      editorRefs.current[index].descriptionRef.current = value;
-    }
-    console.log("Updated Fields:", editorRefs.current);
-  }, []);
+  const handleFieldChange = (index, name, value) => {
+    const updatedFields = [...dynamicFields];
+    updatedFields[index][name] = value;
+    setDynamicFields(updatedFields);
+  };
 
-
-  const handleAddField = useCallback((op) => {
-    console.log(dynamicFields.length)
-    if(op === 1 && dynamicFields.length >= 5) {
-      alert("You can add maximum 5 heading and description")
+  const handleAddField = (op) => {
+    if(dynamicFields.length >= 5 && op === 1) {
+      alert("You can only add maximum 5 heading & description")
       return
     }
 
-    if(op === -1 && dynamicFields.length <= 1) return
+    if(dynamicFields.length <= 1 && op === -1) return
 
     setDynamicFields(prevFields => {
-      const newFields = [...prevFields];
       if(op === 1) {
-        newFields.push({ [`heading_${prevFields.length + 1}`]: '', [`description_${prevFields.length + 1}`]: '' });
-        // Add new refs for the new dynamic field
-        editorRefs.current.push({ headingRef: React.createRef(), descriptionRef: React.createRef() });
-      } else if (op === -1 && prevFields.length > 1) {
-        newFields.pop();
-        // Remove the last ref object
-        editorRefs.current.pop();
+        return [
+          ...prevFields,
+          { [`heading_${prevFields.length + 1}`]: '', [`description_${prevFields.length + 1}`]: '' },
+        ]
+      } else if (op === -1) {
+        return prevFields.slice(0, prevFields.length - 1)
       }
-      return newFields;
-    });
-  }, [dynamicFields]);
+    })
+  };
 
-  const handleChange2 = (name, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-    }));
-  }
-  
-
-  const config = useMemo(
-    () => ({
-      readonly: false
-    }),
-    []
-  );
-
-  return (
+  return authenticated ? (
     <div className="min-h-screen bg-gray-100 p-8">
       <div className="bg-white p-8 shadow-md rounded-md">
         <h2 className="text-2xl font-bold mb-4 text-center">Add Data</h2>
@@ -135,14 +134,15 @@ function UploadDataForm2() {
               name="name"
               className="w-full p-2 border border-gray-300 rounded"
               value={formData.name}
-              onChange={(e) => handleChange2("name", e.target.value)}
+              onChange={(e) => handleChange("name", e.target.value)}
+              // defaultValue={"Destiny"}
             >
               {Object.values({
                 DESTINY: "Destiny",
                 SOUL: "Soul",
                 PERSONALITY: "Personality",
                 INTENSIFICATION: "Intensification",
-                KARMA: "Karma",
+                KARAMA: "Karama",
                 SUBCONSCIOUS: "Subconscious",
                 POINTOFSECURITY: "Point Of Security",
                 BIRTHDAY: "Birth Day",
@@ -172,7 +172,7 @@ function UploadDataForm2() {
               name="numerologyNumber"
               className="w-full p-2 border border-gray-300 rounded"
               value={formData.numerologyNumber}
-              onChange={(e) => handleChange2("numerologyNumber", e.target.value)}
+              onChange={(e) => handleChange("numerologyNumber", e.target.value)}
             />
           </div>
 
@@ -181,27 +181,15 @@ function UploadDataForm2() {
               <label htmlFor={`heading_${index + 1}`} className="block text-gray-700 font-bold mb-2">
                 Heading {index + 1}
               </label>
-              {/* <QuillEditor
+              <QuillEditor
                 value={field[`heading_${index + 1}`]}
-                onChange={content => handleFieldChange(index, `heading_${index+1}`, content)}
-              /> */}
-              <JoditEditor
-                value={field[`heading_${index + 1}`]}
-                config={config}
-                tabIndex={1}
                 onChange={content => handleFieldChange(index, `heading_${index+1}`, content)}
               />
               <label htmlFor={`description_${index + 1}`} className="block text-gray-700 font-bold mb-2 mt-4">
                 Description {index + 1}
               </label>
-              {/* <QuillEditor
+              <QuillEditor
                 value={field[`description_${index + 1}`]}
-                onChange={content => handleFieldChange(index, `description_${index+1}`, content)}
-              /> */}
-              <JoditEditor
-                value={field[`description_${index + 1}`]}
-                config={config}
-                tabIndex={1}
                 onChange={content => handleFieldChange(index, `description_${index+1}`, content)}
               />
             </div>
@@ -227,26 +215,14 @@ function UploadDataForm2() {
           <label htmlFor="heading_suggestion" className="block text-gray-700 font-bold mb-2">
           Heading Suggestion
           </label>
-          {/* <QuillEditor value={formData.heading_suggestion} onChange={(content) => handleChange("heading_suggestion", content)} /> */}
-          <JoditEditor
-            // value={formData.heading_suggestion}
-            config={config}
-            tabIndex={1}
-            onChange={(content) => handleChange2("heading_suggestion", content)}
-          />
+          <QuillEditor value={formData.heading_suggestion} onChange={(content) => handleChange("heading_suggestion", content)} />
         </div>
 
         <div className="mb-4">
           <label htmlFor="description_suggestion" className="block text-gray-700 font-bold mb-2">
           Description Suggestion
           </label>
-          {/* <QuillEditor value={formData.description_suggestion} onChange={(content) => handleChange("description_suggestion", content)} /> */}
-          <JoditEditor
-            // value={formData.description_suggestion}
-            config={config}
-            tabIndex={1}
-            onChange={(content) => handleChange2("description_suggestion", content)}
-          />
+          <QuillEditor value={formData.description_suggestion} onChange={(content) => handleChange("description_suggestion", content)} />
         </div>
 
           <div className="flex items-center justify-center">
@@ -257,12 +233,15 @@ function UploadDataForm2() {
               
             >
               <Plus size={20}/>
+              {/* <span className="mx-2">Add</span> */}
             </button>
           </div>
         </form>
       </div>
     </div>
+  ) : (
+    ""
   );
 }
 
-export default UploadDataForm2;
+export default UploadDataForm;

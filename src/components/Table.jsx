@@ -124,7 +124,7 @@ const DataListing = () => {
   const handleBack = () => {
     setSelectedItem(null);
     setIsUpdating(false);
-    // window.location.href = "/home/table"
+    window.location.reload()
   };
 
   const handleNextPage = (page) => {
