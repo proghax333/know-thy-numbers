@@ -1,11 +1,11 @@
-import React, { useState, useEffect , useMemo} from "react";
+import { useState, useEffect , useMemo} from "react";
 import axios from "axios";
+import { orderBy } from 'lodash';
 import UpdateForm from "./UpdateForm";
 import FilterData from "./FilterData";
 import env from "../secrets.js";
 import { useNavigate, useLocation } from "react-router-dom";
 import DataTable from 'react-data-table-component';
-import { Tooltip as ReactTooltip } from 'react-tooltip';
 import { useFilter } from '../contexts/FilterContext';
 
 const { VITE_BACKEND_HOST } = env;
@@ -67,17 +67,16 @@ const DataListing = () => {
     },
   };
 
-  const navigate = useNavigate();
   const location = useLocation();
 
   const { filterState, setFilterState } = useFilter();
 
+  const [totalDataList, setTotalDataList] = useState([])
   const [dataList, setDataList] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [total, setTotal] = useState(0);
-  const [goToPage, setGoToPage] = useState(1);
   const [pending, setPending] = useState(true);
   const [isOpen, setIsOpen] = useState(false)
 	const [resetPaginationToggle, setResetPaginationToggle] = useState(false);
@@ -87,10 +86,8 @@ const DataListing = () => {
   const [filterOption, setFilterOption] = useState(filterState.filterOption);
 
   useEffect(() => {
-    // Fetch data from the backend using Axios
     const fetchData = async () => {
       try {
-
         const params = new URLSearchParams(location.search)
         const text = params.get("filterText")
         const option = params.get("filterOption")
@@ -99,14 +96,14 @@ const DataListing = () => {
         let response = await axios({
           method: "post",
           url,
-          data: { filterText: text ?? filterText, filterOption: option ?? filterOption, currentPage, pageSize },
+          data: { filterText: text ?? filterText, filterOption: option ?? filterOption, currentPage: 1, pageSize: 5000 },
           headers: { "Content-Type": "application/json" },
           // withCredentials: true
         });
 
         console.log(response.data);
 
-        setDataList(response.data.data); // Assuming the response is an array of data
+        setTotalDataList(response.data.data); // Assuming the response is an array of data
         setTotal(response.data.totalPage);
         setPending(false)
       } catch (error) {
@@ -114,8 +111,27 @@ const DataListing = () => {
       }
     };
 
+    fetchData().then(() => console.log("fetched data"));
+
+  }, [filterText, filterOption, location])
+
+  useEffect(() => {
+    // Fetch data from the backend using Axios
+    const fetchData = async () => {
+      try {
+        let limit = pageSize
+        let offset = (currentPage - 1) * pageSize
+
+        setDataList(() => totalDataList.slice(offset, limit + offset)); // Assuming the response is an array of data
+        // setTotal(response.data.totalPage);
+        // setPending(false)
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
     fetchData().then();
-  }, [currentPage, filterText, filterOption, pageSize, location]);
+  }, [totalDataList, currentPage, pageSize]);
 
   useEffect(() => {
     setFilterState({ filterText, filterOption });
@@ -169,6 +185,15 @@ const DataListing = () => {
     );
   }, [filterText, filterOption, resetPaginationToggle]);
 
+  const handleSort = (column, sortDirection) => {
+		// simulate server sort
+		console.log(column, column.selector, sortDirection);
+		setPending(true);
+
+    setTotalDataList(orderBy(totalDataList, column.selector, sortDirection));
+		setPending(false);
+	};
+
 
   return (
     <div className="min-h-screen bg-gray-100 p-8">
@@ -211,6 +236,8 @@ const DataListing = () => {
               paginationServer={true}
               onChangePage={handleNextPage}
               onChangeRowsPerPage={handleRowsPerPage}
+              sortServer={true}
+			        onSort={handleSort}
             />
           </div>
         )

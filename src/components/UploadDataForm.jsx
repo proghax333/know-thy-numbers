@@ -151,6 +151,8 @@ function UploadDataForm2() {
                 PERSONALMONTH: "Personal Month",
                 PERSONALDAY: "Personal Day",
                 CORENUMBERCOMBO: "Core Number Combo",
+                PINNACLES: "Pinnacles",
+                Challenges: "Challenges"
               }).map((value) => (
                 <option key={value} value={value}>
                   {value}
